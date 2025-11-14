@@ -14,6 +14,22 @@ const nextConfig: NextConfig = {
     config.externals.push("pino-pretty", "lokijs", "encoding");
     return config;
   },
+
+  // ADD THIS BLOCK
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "pbs.twimg.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "video.twimg.com",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 const isIpfs = process.env.NEXT_PUBLIC_IPFS_BUILD === "true";
@@ -21,9 +37,11 @@ const isIpfs = process.env.NEXT_PUBLIC_IPFS_BUILD === "true";
 if (isIpfs) {
   nextConfig.output = "export";
   nextConfig.trailingSlash = true;
+  // For IPFS, disable Next.js image optimization
   nextConfig.images = {
+    ...nextConfig.images,
     unoptimized: true,
   };
 }
 
-module.exports = nextConfig;
+export default nextConfig;

@@ -1,72 +1,101 @@
 "use client";
 
-import Link from "next/link";
-import type { NextPage } from "next";
+import { useState, useEffect } from "react";
+import useSWR from "swr";
+import HeroSection from "~~/components/HeroSection";
+import WalletControls from "~~/components/WalletControls";
+import MintTicketButton from "~~/components/MintTokenButton";
+import TweetGrid from "~~/components/TweetGrid";
+
+import TweetModal from "~~/components/TweetModal";
 import { useAccount } from "wagmi";
-import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { Address } from "~~/components/scaffold-eth";
 
-const Home: NextPage = () => {
-  const { address: connectedAddress } = useAccount();
+const fetcher = async (url: string) => {
+  // Check localStorage cache first
+  const cacheKey = `tweet_cache_${url}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    const { data, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp < 5 * 60 * 1000) { // 5 minutes cache
+      return data;
+    }
+  }
 
-  return (
-    <>
-      <div className="flex items-center flex-col grow pt-10">
-        <div className="px-5">
-          <h1 className="text-center">
-            <span className="block text-2xl mb-2">Welcome to</span>
-            <span className="block text-4xl font-bold">Scaffold-ETH 2</span>
-          </h1>
-          <div className="flex justify-center items-center space-x-2 flex-col">
-            <p className="my-2 font-medium">Connected Address:</p>
-            <Address address={connectedAddress} />
-          </div>
+  // Fetch from API
+  const res = await fetch(url);
+  const data = await res.json();
 
-          <p className="text-center text-lg">
-            Get started by editing{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/nextjs/app/page.tsx
-            </code>
-          </p>
-          <p className="text-center text-lg">
-            Edit your smart contract{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              YourContract.sol
-            </code>{" "}
-            in{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/hardhat/contracts
-            </code>
-          </p>
-        </div>
+  // Cache in localStorage
+  localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
 
-        <div className="grow bg-base-300 w-full mt-16 px-8 py-12">
-          <div className="flex justify-center items-center gap-12 flex-col md:flex-row">
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <BugAntIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Tinker with your smart contract using the{" "}
-                <Link href="/debug" passHref className="link">
-                  Debug Contracts
-                </Link>{" "}
-                tab.
-              </p>
-            </div>
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <MagnifyingGlassIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Explore your local transactions with the{" "}
-                <Link href="/blockexplorer" passHref className="link">
-                  Block Explorer
-                </Link>{" "}
-                tab.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
+  return data;
 };
 
-export default Home;
+export default function Home() {
+  const [username, setUsername] = useState("ETHSafari");
+  const [selectedTweet, setSelectedTweet] = useState<any>(null);
+  const [likedTweets, setLikedTweets] = useState<Set<string>>(new Set());
+  const [onChainComments, setOnChainComments] = useState<Record<string, any[]>>({});
+  const [onChainLikes, setOnChainLikes] = useState<Record<string, number>>({});
+
+  const { address, isConnected } = useAccount();
+  const {
+    data: tweetData,
+    error: tweetErr,
+    isLoading: tweetsLoading,
+  } = useSWR(`/api/tweets?username=${username}`, fetcher, { refreshInterval: 5 * 60 * 1000 });
+
+  useEffect(() => {
+    if (!tweetData?.tweets) return;
+    const comments = tweetData.tweets.reduce((acc: any, t: any) => ({ ...acc, [t.id]: [] }), {});
+    const likes = tweetData.tweets.reduce((acc: any, t: any) => ({ ...acc, [t.id]: 0 }), {});
+    setOnChainComments(comments);
+    setOnChainLikes(likes);
+  }, [tweetData?.tweets]);
+
+  const likeTweet = (id: string) => {
+    if (!isConnected || likedTweets.has(id)) return;
+    setLikedTweets(new Set(likedTweets).add(id));
+    setOnChainLikes((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+  };
+
+  return (
+    <main className="max-w-5xl mx-auto p-6">
+      <HeroSection />
+      <WalletControls onUsernameChange={setUsername} />
+      {isConnected && <MintTicketButton />}
+      {tweetsLoading ? (
+        <p className="text-center">Loading tweets...</p>
+      ) : tweetErr ? (
+        <p className="text-center text-red-500">Error loading tweets: {tweetErr.message}</p>
+      ) : (
+        <TweetGrid
+          tweets={tweetData?.tweets || []}
+          onTweetClick={setSelectedTweet}
+          onLike={likeTweet}
+          likedTweets={likedTweets}
+          onChainLikes={onChainLikes}
+        />
+      )}
+      <TweetModal
+        tweet={selectedTweet}
+        open={!!selectedTweet}
+        onClose={() => setSelectedTweet(null)}
+        comments={onChainComments[selectedTweet?.id] || []}
+        onComment={(id, content) => {
+          setOnChainComments((prev) => ({
+            ...prev,
+            [id]: [
+              ...(prev[id] || []),
+              {
+                content,
+                author: address?.slice(0, 8) + "..." || "You",
+                timestamp: Date.now() / 1000,
+              },
+            ],
+          }));
+        }}
+      />
+    </main>
+  );
+}

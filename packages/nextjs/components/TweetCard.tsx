@@ -19,16 +19,10 @@ type Props = {
   onChainLikes: number;
 };
 
-export default function                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     TweetCard({ tweet, onClick, onLike, liked, onChainLikes }: Props) {
+export default function TweetCard({ tweet, onClick, onLike, liked, onChainLikes }: Props) {
   const { isConnected } = useAccount();
 
-  // Add guard clause at the top
-  if (!tweet.author) return null;
-
-  // Add guard clause at the top
-  if (!tweet || !tweet.author) {
-    return null;
-  }
+  // Handle missing author gracefully
 
   return (
     <article
@@ -36,10 +30,10 @@ export default function                                                         
       onClick={onClick}
     >
       <div className="flex items-center gap-3 mb-3">
-        {tweet.author.profile_image_url ? (
+        {tweet.author?.profile_image_url ? (
           <Image
             src={tweet.author.profile_image_url}
-            alt={tweet.author.username}
+            alt={tweet.author?.username || ""}
             width={48}
             height={48}
             className="rounded-full"
@@ -48,10 +42,10 @@ export default function                                                         
           <div className="w-12 h-12 bg-gray-300 rounded-full" />
         )}
         <div>
-          <p className="font-bold">{tweet.author.name}</p>
-          <p className="text-sm text-gray-600">@{tweet.author.username}</p>
+          <p className="font-bold">{tweet.author?.name || "Unknown User"}</p>
+          <p className="text-sm text-gray-600">@{tweet.author?.username || "unknown"}</p>
         </div>
-        {tweet.author.verified && <span className="text-blue-500 text-xs">Verified</span>}
+        {tweet.author?.verified && <span className="text-blue-500 text-xs">Verified</span>}
       </div>
 
       <p className="mb-3">{tweet.text}</p>
