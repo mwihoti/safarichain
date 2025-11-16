@@ -55,7 +55,7 @@ export default function TweetCard({ tweet, onClick, onLike, liked, onChainLikes 
           {tweet.media.slice(0, 4).map((m, i) => (
             <div key={i} className="relative aspect-square">
               {m.type === "photo" && m.url ? (
-                <Image src={m.url} alt="" fill className="rounded-md object-cover" />
+                <img src={m.url} alt="" className="w-full h-full rounded-md object-cover" />
               ) : (
                 <div className="bg-gray-200 rounded-md flex items-center justify-center w-full h-full">
                   <svg className="w-10 h-10 text-gray-500" fill="currentColor" viewBox="0 0 24 24">

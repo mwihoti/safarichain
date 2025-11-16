@@ -1,11 +1,15 @@
 // app/tickets/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import html2canvas from "html2canvas";
 import { useAccount, useWalletClient } from "wagmi";
 import { createGaslessSmartAccount } from "~~/utils/gasless";
-import html2canvas from "html2canvas";
+
+// app/tickets/page.tsx
+
+// app/tickets/page.tsx
 
 type Ticket = {
   tokenId: number;
@@ -19,8 +23,7 @@ export default function TicketsPage() {
   const { data: walletClient } = useWalletClient();
   const [username, setUsername] = useState("");
   const [isMinting, setIsMinting] = useState(false);
-  const [userTickets, setUserTickets] = useState<Ticket[]>([]);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [mintedSuccess, setMintedSuccess] = useState(false);
 
   // Load user tickets from localStorage
   useEffect(() => {
@@ -50,7 +53,7 @@ export default function TicketsPage() {
         ],
         functionName: "mintTicket",
         args: [username],
-        value: BigInt(10**16), // 0.01 ETH
+        value: BigInt(10 ** 16), // 0.01 ETH
       });
 
       // Simulate adding to localStorage
@@ -64,6 +67,8 @@ export default function TicketsPage() {
       setUserTickets(updatedTickets);
       localStorage.setItem(`tickets_${address}`, JSON.stringify(updatedTickets));
       setUsername("");
+      setMintedSuccess(true);
+      setTimeout(() => setMintedSuccess(false), 5000); // Hide after 5 seconds
     } catch (error) {
       console.error("Minting failed:", error);
     } finally {
@@ -111,7 +116,7 @@ export default function TicketsPage() {
                   type="text"
                   placeholder="Enter your username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={e => setUsername(e.target.value)}
                   className="w-full p-3 rounded-lg border-0 bg-white/20 text-white placeholder-white/70"
                 />
                 <button
@@ -124,6 +129,12 @@ export default function TicketsPage() {
               </div>
             </div>
 
+            {mintedSuccess && (
+              <div className="bg-green-500 text-white p-4 rounded-lg mb-8 animate-pulse">
+                🎉 Ticket minted successfully! Check your tickets below.
+              </div>
+            )}
+
             {/* User's Tickets */}
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8">
               <h2 className="text-2xl font-bold text-white mb-4">Your Tickets</h2>
@@ -131,23 +142,19 @@ export default function TicketsPage() {
                 <p className="text-white/70">No tickets yet. Mint your first one above!</p>
               ) : (
                 <div className="space-y-4">
-                  {userTickets.map((ticket) => (
+                  {userTickets.map(ticket => (
                     <div
                       key={ticket.tokenId}
                       id={`ticket-${ticket.tokenId}`}
-                      className="bg-white rounded-lg p-6 shadow-lg"
+                      className="bg-gradient-to-r from-orange-100 to-yellow-100 rounded-lg p-6 shadow-lg border-2 border-orange-300"
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <h3 className="text-xl font-bold text-gray-800">ETHSafari 2026 Ticket</h3>
                           <p className="text-gray-600">Token ID: {ticket.tokenId}</p>
+                          <p className="text-sm text-green-600 font-semibold">Valid for ETHSafari 2026</p>
                         </div>
-                        <Image
-                          src="/ethsafari-logo.png"
-                          alt="ETHSafari"
-                          width={60}
-                          height={30}
-                        />
+                        <Image src="/ethsafari-logo.png" alt="ETHSafari" width={60} height={30} />
                       </div>
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>

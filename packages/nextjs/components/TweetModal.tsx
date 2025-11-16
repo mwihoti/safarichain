@@ -5,7 +5,7 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Image from "next/image";
-import { useAccount, useWalletClient, useReadContract } from "wagmi";
+import { useAccount, useWalletClient } from "wagmi";
 import { createGaslessSmartAccount } from "~~/utils/gasless";
 
 type Props = {
@@ -24,39 +24,14 @@ export default function TweetModal({ tweet, open, onClose, comments, onComment }
   const [input, setInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: realComments } = useReadContract({
-    address: CONTRACT,
-    abi: [
-      {
-        inputs: [{ internalType: "string", name: "tweetId", type: "string" }],
-        name: "getCommentsForTweet",
-        outputs: [
-          {
-            components: [
-              { internalType: "string", name: "tweetId", type: "string" },
-              { internalType: "string", name: "content", type: "string" },
-              { internalType: "address", name: "author", type: "address" },
-              { internalType: "uint256", name: "timestamp", type: "uint256" },
-            ],
-            internalType: "struct ETHSafariComments.Comment[]",
-            name: "",
-            type: "tuple[]",
-          },
-        ],
-        stateMutability: "view",
-        type: "function",
-      },
-    ],
-    args: [tweet?.id || ""],
-  });
-
-  const displayComments = realComments || comments;
+  // Guard: if tweet is null or author is null, render nothing
+  if (!tweet || !tweet.author) return null;
 
   const submit = async () => {
-    if (!input.trim() || !walletClient || !tweet?.id) return;
+    if (!input.trim() || !walletClient) return;
     setIsSubmitting(true);
     try {
-      onComment(tweet?.id || "", input);
+      onComment(tweet.id, input);
       const smartAccountClient = await createGaslessSmartAccount(walletClient);
       await smartAccountClient.writeContract({
         address: CONTRACT,
@@ -73,7 +48,7 @@ export default function TweetModal({ tweet, open, onClose, comments, onComment }
           },
         ],
         functionName: "addComment",
-        args: [tweet?.id || "", input],
+        args: [tweet.id, input],
       });
       setInput("");
     } catch (error) {
@@ -112,7 +87,7 @@ export default function TweetModal({ tweet, open, onClose, comments, onComment }
               <Dialog.Panel className="w-full max-w-2xl bg-white rounded-2xl p-6 shadow-2xl">
                 {/* Author Header */}
                 <Dialog.Title className="text-xl font-bold flex items-center gap-3">
-                  {tweet?.author?.profile_image_url ? (
+                  {tweet.author?.profile_image_url ? (
                     <Image
                       src={tweet.author.profile_image_url}
                       alt={tweet.author.username || "User"}
@@ -124,16 +99,16 @@ export default function TweetModal({ tweet, open, onClose, comments, onComment }
                     <div className="w-10 h-10 bg-gray-300 rounded-full" />
                   )}
                   <div>
-                    <div>{tweet?.author?.name || "Unknown User"}</div>
-                    <div className="text-sm text-gray-500">@{tweet?.author?.username || "unknown"}</div>
+                    <div>{tweet.author?.name || "Unknown User"}</div>
+                    <div className="text-sm text-gray-500">@{tweet.author?.username || "unknown"}</div>
                   </div>
                 </Dialog.Title>
 
                 {/* Tweet Text */}
-                <p className="mt-4 text-lg">{tweet?.text || "Loading..."}</p>
+                <p className="mt-4 text-lg">{tweet.text}</p>
 
                 {/* Media */}
-                {tweet?.media && tweet.media.length > 0 && (
+                {tweet.media && tweet.media.length > 0 && (
                   <div className="mt-6 space-y-3">
                     {tweet.media.map((m: any, i: number) => (
                       <div key={i}>
@@ -159,8 +134,8 @@ export default function TweetModal({ tweet, open, onClose, comments, onComment }
                 {/* On-Chain Comments */}
                 <div className="mt-8">
                   <h3 className="font-bold text-lg mb-3">On-Chain Comments</h3>
-                  {displayComments.length ? (
-                    displayComments.map((c, i) => (
+                  {comments.length ? (
+                    comments.map((c, i) => (
                       <div key={i} className="border-l-4 border-green-500 pl-4 mb-3 text-sm">
                         <p>{c.content}</p>
                         <p className="text-xs text-gray-500">

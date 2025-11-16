@@ -6,6 +6,8 @@ const API_KEY = process.env.TWITTERAPI_IO_KEY!;
 const CACHE_TTL = 5 * 60 * 1000;
 const cache = new Map<string, { data: any; ts: number }>();
 
+type Media = { type: string; url?: string; width?: number; height?: number };
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const username = (searchParams.get('username') ?? 'ETHSafari').replace(/^@/, '');
@@ -18,16 +20,20 @@ export async function GET(request: Request) {
 
   try {
     const url = `${API_BASE}?userName=${encodeURIComponent(username)}`;
+    console.log('Fetching tweets for', username, 'url:', url);
     const res = await fetch(url, {
       headers: { 'X-API-Key': API_KEY },
     });
 
+    console.log('Response status:', res.status);
     if (!res.ok) {
       const txt = await res.text();
+      console.error('API error:', txt);
       throw new Error(`twitterapi.io ${res.status}: ${txt}`);
     }
 
     const json = await res.json();
+    console.log('API response:', json);
     if (json.status !== 'success') throw new Error(json.msg ?? 'API error');
 
     const tweets = (json.data.tweets ?? []).map((t: any) => {
