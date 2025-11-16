@@ -1,80 +1,92 @@
-# 🏗 Scaffold-ETH 2
+# SafariChain
 
-<h4 align="center">
-  <a href="https://docs.scaffoldeth.io">Documentation</a> |
-  <a href="https://scaffoldeth.io">Website</a>
-</h4>
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENCE)
+[![Built with Scaffold-ETH 2](https://img.shields.io/badge/Built%20with-Scaffold--ETH%202-FF6B35)](https://scaffoldeth.io)
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+SafariChain is a decentralized social and ticketing platform that transforms ETHSafari into a fully on-chain community experience. It pulls real-time ETHSafari tweets via twitterapi.io, lets users connect their wallet to comment and like directly on-chain (preserving anonymity), and enables minting of the official 2026 ETHSafari NFT Ticket — burnable at the gate. SafariChain turns every tweet into a discussion thread on the blockchain and makes event access a native Web3 action. No logins. No data leaks. Just wallets, tweets, and tickets — all on-chain.
 
-⚙️ Built using NextJS, RainbowKit, Hardhat, Wagmi, Viem, and Typescript.
+## Features
 
-- ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
-- 🪝 **[Custom hooks](https://docs.scaffoldeth.io/hooks/)**: Collection of React hooks wrapper around [wagmi](https://wagmi.sh/) to simplify interactions with smart contracts with typescript autocompletion.
-- 🧱 [**Components**](https://docs.scaffoldeth.io/components/): Collection of common web3 components to quickly build your frontend.
-- 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
+- **Real-Time Tweet Integration**: Fetches and displays ETHSafari tweets using Twitter API for seamless social interaction.
+- **On-Chain Interactions**: Comment and like tweets directly on the blockchain, ensuring privacy and decentralization.
+- **NFT Ticketing**: Mint and burn official 2026 ETHSafari NFT Tickets for event access.
+- **Gasless Transactions**: Supports gasless smart accounts for user-friendly interactions.
+- **Wallet-Only Access**: No traditional logins required; connect your wallet and engage.
+- **Built on Scaffold-ETH 2**: Leverages modern Ethereum tooling for robust, scalable dApps.
 
-![Debug Contracts tab](https://github.com/scaffold-eth/scaffold-eth-2/assets/55535804/b237af0c-5027-4849-a5c1-2e31495cccb1)
+## Getting Started
 
-## Requirements
+### Prerequisites
 
-Before you begin, you need to install the following tools:
+- [Node.js](https://nodejs.org/) (>= v20.18.3)
+- [Yarn](https://yarnpkg.com/) (v1 or v2+)
+- [Git](https://git-scm.com/)
 
-- [Node (>= v20.18.3)](https://nodejs.org/en/download/)
-- Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
-- [Git](https://git-scm.com/downloads)
+### Installation
 
-## Quickstart
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/mwihoti/safarichain.git
+   cd safarichain
+   ```
 
-To get started with Scaffold-ETH 2, follow the steps below:
+2. Install dependencies:
+   ```bash
+   yarn install
+   ```
 
-1. Install dependencies if it was skipped in CLI:
+3. Set up environment variables:
+   - Copy `packages/nextjs/.env.example` to `packages/nextjs/.env.local` and fill in the required values:
+     - `NEXT_PUBLIC_ALCHEMY_API_KEY`: Your Alchemy API key
+     - `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID`: Your WalletConnect Project ID
+   - For Twitter API integration, ensure you have access to twitterapi.io and configure accordingly in the app.
 
+### Running the Project
+
+1. Start the local Ethereum network:
+   ```bash
+   yarn chain
+   ```
+
+2. Deploy the smart contracts:
+   ```bash
+   yarn deploy
+   ```
+
+3. Start the Next.js frontend:
+   ```bash
+   yarn start
+   ```
+
+   Visit `http://localhost:3000` to interact with the app. Use the Debug Contracts tab to test smart contract interactions.
+
+### Usage Examples
+
+- **Viewing Tweets**: Navigate to the home page to see real-time ETHSafari tweets.
+- **On-Chain Comments**: Connect your wallet, open a tweet modal, and submit comments gaslessly.
+- **Minting Tickets**: Use the ticketing interface to mint NFT tickets for ETHSafari 2026.
+- **Liking Tweets**: Click the heart icon on tweets to like them on-chain.
+
+## Smart Contracts
+
+SafariChain includes two main smart contracts:
+
+- **ETHSafariComments**: Handles on-chain comments and likes for tweets, minting NFT comments.
+- **ETHSafariTicket**: Manages NFT tickets for ETHSafari 2026 events.
+
+Contracts are deployed to Sepolia testnet and can be found in `packages/hardhat/contracts/`.
+
+## Testing
+
+Run the smart contract tests:
+```bash
+yarn hardhat:test
 ```
-cd my-dapp-example
-yarn install
-```
 
-2. Run a local network in the first terminal:
+## Contributing
 
-```
-yarn chain
-```
+We welcome contributions! Please read our [contributing guidelines](CONTRIBUTING.md) for more information.
 
-This command starts a local Ethereum network using Hardhat. The network runs on your local machine and can be used for testing and development. You can customize the network configuration in `packages/hardhat/hardhat.config.ts`.
+## License
 
-3. On a second terminal, deploy the test contract:
-
-```
-yarn deploy
-```
-
-This command deploys a test smart contract to the local network. The contract is located in `packages/hardhat/contracts` and can be modified to suit your needs. The `yarn deploy` command uses the deploy script located in `packages/hardhat/deploy` to deploy the contract to the network. You can also customize the deploy script.
-
-4. On a third terminal, start your NextJS app:
-
-```
-yarn start
-```
-
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
-
-Run smart contract test with `yarn hardhat:test`
-
-- Edit your smart contracts in `packages/hardhat/contracts`
-- Edit your frontend homepage at `packages/nextjs/app/page.tsx`. For guidance on [routing](https://nextjs.org/docs/app/building-your-application/routing/defining-routes) and configuring [pages/layouts](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts) checkout the Next.js documentation.
-- Edit your deployment scripts in `packages/hardhat/deploy`
-
-
-## Documentation
-
-Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
-
-To know more about its features, check out our [website](https://scaffoldeth.io).
-
-## Contributing to Scaffold-ETH 2
-
-We welcome contributions to Scaffold-ETH 2!
-
-Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+This project is licensed under the MIT License - see the [LICENCE](LICENCE) file for details.
